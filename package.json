@@ -4,9 +4,9 @@
   "description": "A WhatsApp bot created using Node.js",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name VORTEX|MD",
-    "stop": "pm2 stop VORTEX|MD",
-    "restart": "pm2 restart VORTEX|MD"
+    "start": "pm2 start index.js --deep-monitoring --attach --name VORTEXMD",
+    "stop": "pm2 stop VORTEXMD",
+    "restart": "pm2 restart VORTEXMD"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "6.6.0",
