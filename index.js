@@ -8,6 +8,29 @@ fetchLatestBaileysVersion,
 Browsers
 } = require('@whiskeysockets/baileys')
 
+if (text === '.menu') {
+    const sections = [
+        {
+            title: "Main Menu",
+            rows: [
+                { title: "📡 Ping", rowId: "ping" },
+                { title: "ℹ️ Bot Info", rowId: "info" },
+                { title: "🖼️ Make Sticker", rowId: "sticker" }
+            ]
+        }
+    ];
+
+    const listMessage = {
+        text: "📜 *Bot Menu* 📜",
+        footer: "🤖 My WhatsApp Bot",
+        title: "Select an option",
+        buttonText: "Open Menu",
+        sections
+    };
+
+    await sock.sendMessage(sender, listMessage);
+}
+
 const { getBuffer, getGroupAdmins, getRandom, h2k, isUrl, Json, runtime, sleep, fetchJson } = require('./lib/functions')
 const fs = require('fs')
 const P = require('pino')
