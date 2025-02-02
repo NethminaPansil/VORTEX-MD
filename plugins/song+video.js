@@ -9,7 +9,7 @@ cmd({
 },
 async(conn, mek, m,{from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply}) => {
 try{
-if(!q) return replay("please give me an url or title")
+if(!q) return reply("please give me an url or title")
 const search = await yts(q)
 const data = search.videos[0];
 const url = data.url
