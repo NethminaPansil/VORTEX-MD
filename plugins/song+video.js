@@ -15,6 +15,7 @@ const data = search.videos[0];
 const url = data.url
   
 let desc = '
+let desc = `
 💝 *VORTEXMD Song Downloader* 💝
 
 title: ${data.title}
@@ -24,7 +25,7 @@ ago: ${data.ago}
 views: ${data.views}
 
 Made By 🍂 Pansilu Nethmina 🍂
-'
+`
 await conn.sendMessage(from,{image:{url: data.thumbnail},caption: desc }, {quoted:mek });
 //download audio
 
