@@ -21,6 +21,7 @@ const { File } = require('megajs')
 const prefix = '.'
 
 const ownerNumber = ['94763513529']
+const menu = require('./menu'); // 🔹 Import menu.js
 
 //===================SESSION-AUTH============================
 if (!fs.existsSync(__dirname + '/auth_info_baileys/creds.json')) {
@@ -78,6 +79,21 @@ conn.sendMessage(ownerNumber + "@s.whatsapp.net", { image: { url: `https://i.ibb
 })
 conn.ev.on('creds.update', saveCreds)  
 
+
+conn.ev.on('messages.upsert', async(mek) => {
+    mek = mek.messages[0];
+    if (!mek.message) return;
+    
+    const from = mek.key.remoteJid;
+    const body = mek.message.conversation || mek.message.extendedTextMessage?.text || '';
+    
+    if (body === '.menu') {
+        await conn.sendMessage(from, { text: menu.getMenu() }); // 🔹 Send menu text
+    }
+});
+
+
+        
 conn.ev.on('messages.upsert', async(mek) => {
 mek = mek.messages[0]
 if (!mek.message) return	
