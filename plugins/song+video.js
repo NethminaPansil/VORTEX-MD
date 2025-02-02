@@ -14,7 +14,6 @@ const search = await yts(q)
 const data = search.videos[0];
 const url = data.url
   
-let desc = '
 let desc = `
 💝 *VORTEXMD Song Downloader* 💝
 
