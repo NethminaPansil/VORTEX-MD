@@ -1,17 +1,19 @@
-import axios from 'axios'
-import fs from 'fs'
-import os from 'os'
-import { exec } from 'child_process'
+import axios from 'axios';
+import fs from 'fs';
+import os from 'os';
+import { exec } from 'child_process';
 
 let handler = async (m, { conn, command, text, usedPrefix }) => {
   if (!text) throw `Usage: ${usedPrefix}${command} <YouTube Video URL> <resolution>`;
-
+  
+  const wait = '🔍 Downloading...';
   m.reply(wait);
+  
   const args = text.split(' ');
   const videoUrl = args[0];
   const resolution = args[1] || '480p';
 
-  const apiUrl = `${APIs.ryzen}/api/downloader/ytmp4?url=${encodeURIComponent(videoUrl)}&quality=${resolution}`;
+  const apiUrl = `https://your-api.com/api/downloader/ytmp4?url=${encodeURIComponent(videoUrl)}&quality=${resolution}`;
 
   try {
     const response = await axios.get(apiUrl);
@@ -19,7 +21,7 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
 
     if (!data.url) throw 'Download URL not found in API response.';
 
-    const { title, author, authorUrl, lengthSeconds, views, uploadDate, description, videoUrl, thumbnail, filename } = data;
+    const { title, author, lengthSeconds, views, uploadDate, description, videoUrl, thumbnail, filename } = data;
 
     const tmpDir = os.tmpdir();
     const filePath = `${tmpDir}/${filename}`;
@@ -38,25 +40,29 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
       writer.on('error', reject);
     });
 
-    // Fix the video duration using ffmpeg
+    // FFmpeg Check
     const outputFilePath = `${tmpDir}/fixed_${filename}`;
-    await new Promise((resolve, reject) => {
-      exec(`ffmpeg -i "${filePath}" -c copy "${outputFilePath}"`, (error) => {
-        if (error) reject(error);
-        else resolve();
+    if (fs.existsSync(filePath)) {
+      await new Promise((resolve, reject) => {
+        exec(`ffmpeg -i "${filePath}" -c copy "${outputFilePath}"`, (error) => {
+          if (error) reject(error);
+          else resolve();
+        });
       });
-    });
+    } else {
+      throw 'Error: Video file download failed!';
+    }
 
-    const caption = `Ini kak videonya @${m.sender.split('@')[0]}
+    if (!fs.existsSync(outputFilePath)) throw 'Error: Fixed video file not found!';
 
-*Title*: ${title}
-*Author*: ${author} (${authorUrl})
-*Duration*: ${lengthSeconds}
-*Views*: ${views}
-*Uploaded*: ${uploadDate}
-*URL*: ${videoUrl}
+    const caption = `📹 *Title*: ${title}
+👤 *Author*: ${author}
+⏳ *Duration*: ${lengthSeconds} sec
+👁️ *Views*: ${views}
+📅 *Uploaded*: ${uploadDate}
 
-*Description*: ${description}`;
+🔗 *URL*: ${videoUrl}
+📝 *Description*: ${description}`;
 
     await conn.sendMessage(m.chat, {
       video: { url: outputFilePath },
@@ -77,25 +83,13 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
       },
     }, { quoted: m });
 
-    fs.unlink(filePath, (err) => {
-      if (err) {
-        console.error(`Failed to delete original video file: ${err}`);
-      } else {
-        console.log(`Deleted original video file: ${filePath}`);
-      }
-    });
-
-    fs.unlink(outputFilePath, (err) => {
-      if (err) {
-        console.error(`Failed to delete fixed video file: ${err}`);
-      } else {
-        console.log(`Deleted fixed video file: ${outputFilePath}`);
-      }
-    });
+    // Delete Temp Files
+    fs.unlink(filePath, (err) => err && console.error(`Failed to delete: ${filePath}`));
+    fs.unlink(outputFilePath, (err) => err && console.error(`Failed to delete: ${outputFilePath}`));
 
   } catch (error) {
-    console.error(`Error: ${error.message}`);
-    throw `Failed to process request: ${error.message || error}`;
+    console.error(`Error:`, error);
+    throw `❌ Error: ${error.message || 'Something went wrong!'}`;
   }
 };
 
@@ -103,8 +97,8 @@ handler.help = ['ytmp4'].map((v) => v + ' <URL> <resolution>');
 handler.tags = ['downloader'];
 handler.command = /^(ytmp4)$/i;
 
-handler.limit = 10
-handler.register = true
-handler.disable = false
+handler.limit = 10;
+handler.register = true;
+handler.disable = false;
 
-export default handler
+export default handler;
