@@ -4,11 +4,10 @@ const P = require('pino');
 const express = require("express");
 const config = require('./config'); // Load config from environment variables
 const { sms, downloadMediaMessage } = require('./lib/msg');
-const fetch = require('node-fetch');
-const axios = require('axios');
+const fetch = require('node-fetch');  // Ensure node-fetch is installed for HTTP requests
+const axios = require('axios');  // Ensure axios is installed
 const qrcode = require('qrcode-terminal');
 const { cmd, commands } = require('./command');
-
 const app = express();
 const port = process.env.PORT || 8000;
 
@@ -16,13 +15,14 @@ const port = process.env.PORT || 8000;
 if (!fs.existsSync(__dirname + '/auth_info_baileys/creds.json')) {
     if (!config.SESSION_ID) return console.log('Please add your session to SESSION_ID env !!');
     const sessdata = config.SESSION_ID;
-    const filer = File.fromURL(`https://mega.nz/file/${sessdata}`);
-    filer.download((err, data) => {
-        if (err) throw err;
-        fs.writeFile(__dirname + '/auth_info_baileys/creds.json', data, () => {
-            console.log("Session downloaded 💝…");
-        });
-    });
+    // Ensure to replace with actual file download method
+    fetch(`https://mega.nz/file/${sessdata}`)
+      .then(response => response.json())
+      .then(data => {
+        fs.writeFileSync(__dirname + '/auth_info_baileys/creds.json', JSON.stringify(data));
+        console.log("Session downloaded 💝...");
+      })
+      .catch(error => console.error("Error downloading session:", error));
 }
 
 //=============================================
