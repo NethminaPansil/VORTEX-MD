@@ -1,66 +1,114 @@
-const config = require('../config');
-const { cmd, commands } = require('../command');
-const fetch = require('node-fetch');
+const { cmd, commands } = require("../command");
+const yts = require("yt-search");
+const { ytmp3 } = require("");
 
-cmd({
-  pattern: "ytmp3",
-  category: "downloader",
-  react: "🎵",
-  desc: "Download YouTube audios as MP3",
-  filename: __filename
-}, async (conn, mek, m, { from, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
-  try {
-    // Ensure a URL is provided
-    if (!q) return await reply('Please provide a YouTube audio URL.');
-
-    const url = encodeURIComponent(q);
-    
-    // Fetch audio details from the API
-    const response = await fetch(`https://dark-shan-yt.koyeb.app/download/ytmp3?url=${url}`);
-    const data = await response.json();
-
-    // Check if the data response is valid
-    if (!data.status || !data.data) {
-      return await reply('Failed to fetch audio details. Please check the URL and try again.');
+cmd(
+  {
+    pattern: "song",
+    react: "🎵",
+    desc: "Download Song",
+    category: "download",
+    filename: __filename,
+  },
+  async (
+    robin,
+    mek,
+    m,
+    {
+      from,
+      quoted,
+      body,
+      isCmd,
+      command,
+      args,
+      q,
+      isGroup,
+      sender,
+      senderNumber,
+      botNumber2,
+      botNumber,
+      pushname,
+      isMe,
+      isOwner,
+      groupMetadata,
+      groupName,
+      participants,
+      groupAdmins,
+      isBotAdmins,
+      isAdmins,
+      reply,
     }
+  ) => {
+    try {
+      if (!q) return reply("*Give me a Name or URL* 🌚❤️");
 
-    const audio = data.data;
+      // Search for the video
+      const search = await yts(q);
+      const data = search.videos[0];
+      const url = data.url;
 
-    // Create message with audio details
-    const message = `
-💝 𝗩𝗢𝗥𝗧𝗘𝗫 𝗠𝗗 𝐒𝐎𝐍𝐆 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃 💝
+      // Song metadata description
+      let desc = `
+*❤️VORTEX SONG DOWNLOADER❤️*
 
-╭━━━━━━━━━●●►
-┢❑ 𝐓𝐢𝐭𝐥𝐞: ${audio.title}
-┢❑ 𝐅𝐨𝐫𝐦𝐚𝐭: ${audio.format}
-┢❑ 𝐓𝐢𝐦𝐞: ${audio.timestump || 'N/A'}
-┢❑ 𝐔𝐩𝐥𝐨𝐚𝐝𝐞𝐝: ${audio.ago || 'N/A'}
-┢❑ 𝐕𝐢𝐞𝐰𝐬: ${audio.views || 'N/A'}
-┢❑ 𝐋𝐢𝐤𝐞𝐬: ${audio.likes || 'N/A'}
-╰━━━━━━━━●●►
-    `;
+👻 *title* : ${data.title}
+👻 *description* : ${data.description}
+👻 *time* : ${data.timestamp}
+👻 *ago* : ${data.ago}
+👻 *views* : ${data.views}
+👻 *url* : ${data.url}
 
-    // Send thumbnail with message
-    await conn.sendMessage(from, {
-      image: { url: audio.thumbnail },
-      caption: message
-    });
+𝐌𝐚𝐝𝐞 𝐛𝐲 PANSILU
+`;
 
-    // Send the audio file
-    await conn.sendMessage(from, {
-      document: { url: audio.download },
-      mimetype: 'audio/mp3',
-      fileName: `${audio.title}.mp3`,
-      caption: `🎶 Downloading: ${audio.title}`
-    });
+      // Send metadata thumbnail message
+      await robin.sendMessage(
+        from,
+        { image: { url: data.thumbnail }, caption: desc },
+        { quoted: mek }
+      );
 
-    // Send confirmation react
-    await conn.sendMessage(from, {
-      react: { text: '✅', key: mek.key }
-    });
+      // Download the audio using @vreden/youtube_scraper
+      const quality = "128"; // Default quality
+      const songData = await ytmp3(url, quality);
 
-  } catch (e) {
-    console.error(e);
-    await reply(`📕 An error occurred: ${e.message || e}`);
+      // Validate song duration (limit: 30 minutes)
+      let durationParts = data.timestamp.split(":").map(Number);
+      let totalSeconds =
+        durationParts.length === 3
+          ? durationParts[0] * 3600 + durationParts[1] * 60 + durationParts[2]
+          : durationParts[0] * 60 + durationParts[1];
+
+      if (totalSeconds > 1800) {
+        return reply("⏱️ audio limit is 30 minitues");
+      }
+
+      // Send audio file
+      await robin.sendMessage(
+        from,
+        {
+          audio: { url: songData.download.url },
+          mimetype: "audio/mpeg",
+        },
+        { quoted: mek }
+      );
+
+      // Send as a document (optional)
+      await robin.sendMessage(
+        from,
+        {
+          document: { url: songData.download.url },
+          mimetype: "audio/mpeg",
+          fileName: `${data.title}.mp3`,
+          caption: "𝐌𝐚𝐝𝐞 𝐛𝐲 PANSILU",
+        },
+        { quoted: mek }
+      );
+
+      return reply("*Thanks for using my bot* 🌚❤️");
+    } catch (e) {
+      console.log(e);
+      reply(`❌ Error: ${e.message}`);
+    }
   }
-});
+);
